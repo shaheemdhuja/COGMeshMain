@@ -1,4 +1,4 @@
-"""OCRAdapter providing deterministic mock optical character recognition."""
+"""OCRAdapter executing optical character recognition using TesseractProvider."""
 
 import asyncio
 import time
@@ -6,11 +6,15 @@ from typing import Any, Dict, List
 
 from app.tasks.base import BaseTaskAdapter
 from app.tasks.enums import TaskStatus
+from app.tasks.providers.tesseract_provider import TesseractProvider
 from app.tasks.result import TaskResult
 
 
 class OCRAdapter(BaseTaskAdapter):
-    """Task adapter executing OCR operations via mock provider."""
+    """Task adapter executing OCR operations via TesseractProvider."""
+
+    def __init__(self):
+        self.provider = TesseractProvider()
 
     @property
     def adapter_name(self) -> str:
@@ -18,11 +22,11 @@ class OCRAdapter(BaseTaskAdapter):
 
     @property
     def provider_name(self) -> str:
-        return "MockOCRProvider"
+        return "TesseractProvider"
 
     @property
     def model_name(self) -> str:
-        return "mock-tesseract-v5"
+        return "tesseract-ocr"
 
     def supported_capabilities(self) -> List[str]:
         return ["OCR"]
@@ -31,7 +35,7 @@ class OCRAdapter(BaseTaskAdapter):
         return isinstance(input_data, dict)
 
     def validate_output(self, output_data: Dict[str, Any]) -> bool:
-        return isinstance(output_data, dict) and "text" in output_data
+        return isinstance(output_data, dict) and ("text" in output_data or "error" in output_data)
 
     async def execute(self, input_data: Dict[str, Any]) -> TaskResult:
         start = time.perf_counter()
@@ -44,22 +48,26 @@ class OCRAdapter(BaseTaskAdapter):
                 output={"error": "Invalid input format"},
             )
 
-        await asyncio.sleep(0.02)
+        ocr_res = await self.provider.extract_text(input_data)
         elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
 
-        output = {
-            "text": "Extracted lecture notes: CogMesh architecture enables distributed edge intelligence across heterogeneous devices.",
-            "confidence": 0.985,
-            "word_count": 13,
-            "page_number": input_data.get("page", 1),
-        }
+        if "error" in ocr_res and "text" not in ocr_res:
+            return TaskResult(
+                status=TaskStatus.FAILURE,
+                output=ocr_res,
+                execution_time_ms=elapsed_ms,
+                adapter_name=self.adapter_name,
+                provider_name=self.provider_name,
+                model_name=self.model_name,
+                metadata={"provider_error": True},
+            )
 
         return TaskResult(
             status=TaskStatus.SUCCESS,
-            output=output,
+            output=ocr_res,
             execution_time_ms=elapsed_ms,
             adapter_name=self.adapter_name,
             provider_name=self.provider_name,
             model_name=self.model_name,
-            metadata={"simulated": True},
+            metadata={"tesseract_execution": True},
         )

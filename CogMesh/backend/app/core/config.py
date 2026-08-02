@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     PORT: int = 8000
     DEBUG: bool = True
 
+    # Real AI Providers Configuration (Milestone 10A)
+    OLLAMA_HOST: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "gemma3:latest"
+    TESSERACT_PATH: str = "tesseract"
+    TRANSLATION_PROVIDER: str = "ollama"
+
+
     # CORS Configuration
     BACKEND_CORS_ORIGINS: List[str] = Field(
         default=["*"],

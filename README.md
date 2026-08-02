@@ -754,6 +754,50 @@ $$\text{Score} = (0.35 \times C) + (0.20 \times B) + (0.20 \times R) + (0.15 \ti
 
 ---
 
+## ⚡ Real AI Providers Integration — Milestone 10A
+
+Milestone 10A integrates real AI provider wrappers (`TesseractProvider`, `OllamaProvider`, `TranslationProvider`) behind the `BaseTaskAdapter` interface without modifying the frozen architecture.
+
+```
++-------------------------------------------------------------------------------+
+|                             RuntimeOrchestrator                               |
++-------------------------------------------------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|                                 TaskRegistry                                  |
+|                 (Maintains TaskType -> AdapterClass mappings)                |
++-------------------------------------------------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|                                AdapterFactory                                 |
+|                     (Instantiates BaseTaskAdapter subclass)                   |
++-------------------------------------------------------------------------------+
+                                        |
+         +------------------------------+------------------------------+
+         |                              |                              |
+         v                              v                              v
++------------------+          +------------------+          +------------------+
+|    OCRAdapter    |          |  SummaryAdapter  |          |   MCQAdapter     |
+|(TesseractProvide)|          | (OllamaProvider) |          | (OllamaProvider) |
++------------------+          +------------------+          +------------------+
+         |                              |                              |
+         v                              v                              v
+  [ Tesseract Binary ]         [ Local Ollama HTTP API ]      [ Local Ollama HTTP API ]
+```
+
+### Environment Configuration (`.env`)
+
+```env
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=gemma3:latest
+TESSERACT_PATH=tesseract
+TRANSLATION_PROVIDER=ollama
+```
+
+---
+
 ## 🧪 Running Tests
 
 ```bash
