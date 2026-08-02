@@ -69,9 +69,18 @@ class GoalNotFoundException(EntityNotFoundException):
         super().__init__("Goal", goal_id)
 
 
+class GoalParsingException(CogMeshException):
+    """Raised when a natural language goal string cannot be parsed into a StructuredGoal."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+        """Initialize goal parsing exception."""
+        super().__init__(message, status_code=422, details=details)
+
+
 class WorkflowException(CogMeshException):
     """Raised when workflow generation or execution fails."""
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
         """Initialize workflow exception."""
         super().__init__(message, status_code=400, details=details)
+

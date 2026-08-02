@@ -237,6 +237,61 @@ CogMesh is a modular, high-performance distributed edge AI runtime that coordina
 
 ---
 
+## 🎯 API Documentation — Goal Service (Sprint 4)
+
+### 1. Parse Natural Language Goal
+- **URL**: `POST /api/v1/goals/parse`
+- **Description**: Transforms a user's natural language goal input into an internal `StructuredGoal` domain object.
+- **HTTP Success Code**: `200 OK`
+
+#### Request Payload Example:
+```json
+{
+  "goal": "Summarize this lecture PDF and generate MCQs."
+}
+```
+
+#### Response Example (200 OK - StructuredGoal JSON):
+```json
+{
+  "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "natural_language_input": "Summarize this lecture PDF and generate MCQs.",
+  "goal_type": "lecture_processing",
+  "input_type": "pdf",
+  "operations": [
+    "OCR",
+    "SUMMARIZATION",
+    "MCQ_GENERATION"
+  ],
+  "priority": 1,
+  "constraints": {},
+  "metadata": {
+    "parsed_at": "2026-08-02T13:30:00Z",
+    "parser_strategy": "deterministic_rule_based"
+  }
+}
+```
+
+#### Error Response (422 Unprocessable Entity - Parsing Failure):
+```json
+{
+  "error": "GoalParsingException",
+  "message": "Unable to identify any supported AI operations from input.",
+  "details": {
+    "input": "unrecognized input text"
+  }
+}
+```
+
+---
+
+## 🧠 Domain Layer Architecture (`app/domain/`)
+
+- **`StructuredGoal`**: Internal representation of parsed user intent (decoupled from raw text and downstream scheduling/workflows).
+- **`ExecutionContext`**: Central in-memory runtime container encapsulating goal parameters, DAG workflows, device registries, capability maps, active task state machines, intermediate results, and telemetry metrics.
+
+---
+
 ## 🧪 Running Tests
 
 ```bash
