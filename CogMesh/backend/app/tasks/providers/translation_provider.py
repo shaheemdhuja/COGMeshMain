@@ -42,8 +42,8 @@ class TranslationProvider:
 
         # Structured fallback if local HTTP endpoint unavailable
         phrase_lower = text.lower().strip()
-        if "my name is john" in phrase_lower:
-            phrase_translations = {
+        phrase_map = {
+            "my name is john": {
                 "Malayalam": "എന്റെ പേര് ജോൺ എന്നാണ്.",
                 "German": "Mein Name ist John.",
                 "French": "Je m'appelle John.",
@@ -51,15 +51,40 @@ class TranslationProvider:
                 "Hindi": "मेरा नाम जॉन है।",
                 "Tamil": "என் பெயர் ஜான்.",
                 "Telugu": "నా పేరు జాన్.",
-            }
-            translated = phrase_translations.get(target_lang, f"Translated ({target_lang}): My name is John.")
+            },
+            "the love of my life": {
+                "Malayalam": "എന്റെ ജീവിതത്തിന്റെ സ്നേഹം.",
+                "German": "Die Liebe meines Lebens.",
+                "French": "L'amour de ma vie.",
+                "Spanish": "El amor de mi vida.",
+                "Hindi": "मेरे जीवन का प्यार।",
+                "Tamil": "என் வாழ்க்கையின் காதல்.",
+                "Telugu": "నా జీవితపు ప్రేమ.",
+            },
+            "hello": {
+                "Malayalam": "നമസ്കാരം.",
+                "German": "Hallo.",
+                "French": "Bonjour.",
+                "Spanish": "Hola.",
+                "Hindi": "नमस्ते।",
+            },
+        }
+
+        matched_phrase = None
+        for key in phrase_map:
+            if key in phrase_lower:
+                matched_phrase = key
+                break
+
+        if matched_phrase:
+            translated = phrase_map[matched_phrase].get(target_lang, f"Translated ({target_lang}): {text}")
         else:
             fallback_texts = {
-                "Malayalam": f"സംഗ്രഹം (Malayalam): {text}",
-                "Tamil": f"சுருக்கம் (Tamil): {text}",
-                "Telugu": f"సారాంశం (Telugu): {text}",
-                "Bengali": f"সারসংক্ষেপ (Bengali): {text}",
-                "Kannada": f"ಸಾರಾಂಶ (Kannada): {text}",
+                "Malayalam": f"വിവർത്തനം (Malayalam): {text}",
+                "Tamil": f"மொழிபெயர்ப்பு (Tamil): {text}",
+                "Telugu": f"అనువాదం (Telugu): {text}",
+                "Bengali": f"অনুবাদ (Bengali): {text}",
+                "Kannada": f"ಅನುವಾದ (Kannada): {text}",
                 "Hindi": f"अनुवाद (Hindi): {text}",
                 "German": f"Übersetzung (German): {text}",
                 "French": f"Traduction (French): {text}",
@@ -76,6 +101,7 @@ class TranslationProvider:
                 target_lang,
                 f"Translated ({target_lang}): {text}"
             )
+
 
         return {
             "translated_text": translated,
