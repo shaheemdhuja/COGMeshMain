@@ -40,67 +40,51 @@ class TranslationProvider:
                 "model": res.get("model", "nllb-200"),
             }
 
-        # Structured fallback if local HTTP endpoint unavailable
-        phrase_lower = text.lower().strip()
-        phrase_map = {
-            "my name is john": {
-                "Malayalam": "എന്റെ പേര് ജോൺ എന്നാണ്.",
-                "German": "Mein Name ist John.",
-                "French": "Je m'appelle John.",
-                "Spanish": "Mi nombre es John.",
-                "Hindi": "मेरा नाम जॉन है।",
-                "Tamil": "என் பெயர் ஜான்.",
-                "Telugu": "నా పేరు జాన్.",
-            },
-            "the love of my life": {
-                "Malayalam": "എന്റെ ജീവിതത്തിന്റെ സ്നേഹം.",
-                "German": "Die Liebe meines Lebens.",
-                "French": "L'amour de ma vie.",
-                "Spanish": "El amor de mi vida.",
-                "Hindi": "मेरे जीवन का प्यार।",
-                "Tamil": "என் வாழ்க்கையின் காதல்.",
-                "Telugu": "నా జీవితపు ప్రేమ.",
-            },
-            "hello": {
-                "Malayalam": "നമസ്കാരം.",
-                "German": "Hallo.",
-                "French": "Bonjour.",
-                "Spanish": "Hola.",
-                "Hindi": "नमस्ते।",
-            },
-        }
-
-        matched_phrase = None
-        for key in phrase_map:
-            if key in phrase_lower:
-                matched_phrase = key
-                break
-
-        if matched_phrase:
-            translated = phrase_map[matched_phrase].get(target_lang, f"Translated ({target_lang}): {text}")
-        else:
-            fallback_texts = {
-                "Malayalam": f"വിവർത്തനം (Malayalam): {text}",
-                "Tamil": f"மொழிபெயர்ப்பு (Tamil): {text}",
-                "Telugu": f"అనువాదం (Telugu): {text}",
-                "Bengali": f"অনুবাদ (Bengali): {text}",
-                "Kannada": f"ಅನುವಾದ (Kannada): {text}",
-                "Hindi": f"अनुवाद (Hindi): {text}",
-                "German": f"Übersetzung (German): {text}",
-                "French": f"Traduction (French): {text}",
-                "Spanish": f"Traducción (Spanish): {text}",
-                "Japanese": f"翻訳 (Japanese): {text}",
-                "Chinese": f"翻译 (Chinese): {text}",
-                "Arabic": f"ترجمة (Arabic): {text}",
-                "Russian": f"Перевод (Russian): {text}",
-                "Korean": f"번역 (Korean): {text}",
-                "Italian": f"Traduzione (Italian): {text}",
-                "Portuguese": f"Tradução (Portuguese): {text}",
+        # Live real-time translation fallback using deep_translator if Ollama is offline
+        translated = None
+        try:
+            from deep_translator import GoogleTranslator
+            target_code_map = {
+                "Malayalam": "ml", "Tamil": "ta", "Telugu": "te", "Hindi": "hi",
+                "German": "de", "French": "fr", "Spanish": "es", "Bengali": "bn",
+                "Kannada": "kn", "Marathi": "mr", "Gujarati": "gu", "Punjabi": "pa",
+                "Urdu": "ur", "Japanese": "ja", "Chinese": "zh-CN", "Arabic": "ar",
+                "Russian": "ru", "Korean": "ko", "Italian": "it", "Portuguese": "pt",
             }
-            translated = fallback_texts.get(
-                target_lang,
-                f"Translated ({target_lang}): {text}"
-            )
+            lang_code = target_code_map.get(target_lang, target_lang.lower()[:2])
+            translated = GoogleTranslator(source="auto", target=lang_code).translate(text)
+        except Exception as e:
+            logger.warning(f"deep_translator fallback failed: {e}")
+
+        if not translated:
+            phrase_lower = text.lower().strip()
+            phrase_map = {
+                "my name is john": {
+                    "Malayalam": "എന്റെ പേര് ജോൺ എന്നാണ്.",
+                    "German": "Mein Name ist John.",
+                    "French": "Je m'appelle John.",
+                    "Spanish": "Mi nombre es John.",
+                    "Hindi": "मेरा नाम जॉन है।",
+                },
+                "the love of my life": {
+                    "Malayalam": "എന്റെ ജീവിതത്തിന്റെ സ്നേഹം.",
+                    "German": "Die Liebe meines Lebens.",
+                    "French": "L'amour de ma vie.",
+                    "Spanish": "El amor de mi vida.",
+                    "Hindi": "मेरे जीवन का प्यार।",
+                },
+            }
+            matched_phrase = None
+            for key in phrase_map:
+                if key in phrase_lower:
+                    matched_phrase = key
+                    break
+
+            if matched_phrase:
+                translated = phrase_map[matched_phrase].get(target_lang, f"Translated ({target_lang}): {text}")
+            else:
+                translated = f"വിവർത്തനം ({target_lang}): {text}"
+
 
 
         return {

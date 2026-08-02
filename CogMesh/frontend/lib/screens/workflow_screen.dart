@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../providers/runtime_provider.dart';
 import '../widgets/dag_painter.dart';
 
@@ -28,6 +29,18 @@ class _WorkflowScreenState extends ConsumerState<WorkflowScreen> {
     _promptController.dispose();
     _filePathController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg', 'txt'],
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _filePathController.text = result.files.single.path!;
+      });
+    }
   }
 
   @override
@@ -59,15 +72,31 @@ class _WorkflowScreenState extends ConsumerState<WorkflowScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text('Optional PDF / Image Document File Path', style: Theme.of(context).textTheme.titleMedium),
+                    Text('Upload PDF / Image / Document File', style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: _filePathController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'e.g. C:/Users/shahe/Desktop/lecture.pdf or notes.png',
-                        prefixIcon: Icon(Icons.attach_file, color: Color(0xFF00E5FF)),
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _filePathController,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Select file or enter path e.g. C:/Users/.../lecture.pdf',
+                              prefixIcon: Icon(Icons.attach_file, color: Color(0xFF00E5FF)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        OutlinedButton.icon(
+                          onPressed: _pickFile,
+                          icon: const Icon(Icons.folder_open, color: Color(0xFF00E5FF)),
+                          label: const Text('Browse File...'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                            side: const BorderSide(color: Color(0xFF00E5FF)),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
