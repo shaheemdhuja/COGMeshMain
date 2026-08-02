@@ -22,6 +22,7 @@ class Device(Base, UUIDMixin, TimestampMixin):
     device_type: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., LAPTOP, PHONE, TABLET
     ip_address: Mapped[str] = mapped_column(String(45), nullable=False)
     port: Mapped[int] = mapped_column(Integer, nullable=False, default=8000)
+    platform: Mapped[str] = mapped_column(String(50), default="unknown", nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="OFFLINE", index=True, nullable=False)  # ONLINE, OFFLINE, BUSY
     last_seen: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -28,6 +28,15 @@ class EntityNotFoundException(CogMeshException):
         super().__init__(message, status_code=404, details={"entity": entity_name, "id": entity_id})
 
 
+class DuplicateEntityException(CogMeshException):
+    """Raised when attempting to register or create an entity that already exists."""
+
+    def __init__(self, entity_name: str, entity_id: Any) -> None:
+        """Initialize duplicate entity exception."""
+        message = f"{entity_name} with ID '{entity_id}' is already registered."
+        super().__init__(message, status_code=409, details={"entity": entity_name, "id": entity_id})
+
+
 class DatabaseException(CogMeshException):
     """Raised when a database interaction fails."""
 
@@ -41,6 +50,14 @@ class DeviceNotFoundException(EntityNotFoundException):
 
     def __init__(self, device_id: str) -> None:
         """Initialize device not found exception."""
+        super().__init__("Device", device_id)
+
+
+class DeviceAlreadyRegisteredException(DuplicateEntityException):
+    """Raised when registering a device ID that already exists in the system."""
+
+    def __init__(self, device_id: str) -> None:
+        """Initialize device already registered exception."""
         super().__init__("Device", device_id)
 
 
