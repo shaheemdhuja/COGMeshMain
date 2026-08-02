@@ -378,6 +378,84 @@ backend/app/workflow/
 
 ---
 
+## 🗓️ API Documentation — Adaptive Task Scheduler (Sprint 6)
+
+### 1. Generate ExecutionPlan
+- **URL**: `POST /api/v1/scheduler/plan`
+- **Description**: Evaluates online edge nodes, computes weighted scoring metrics (`SchedulingScore`), binds each `ExecutionNode` in topological order to an optimal edge device, persists scheduled tasks in SQLite, and returns an `ExecutionPlan`.
+- **HTTP Success Code**: `200 OK`
+
+#### Request Payload Example:
+```json
+{
+  "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+}
+```
+
+#### Response Example (200 OK - ExecutionPlan JSON):
+```json
+{
+  "plan_id": "a5d88921-1123-4567-8901-abcdef123456",
+  "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "workflow_id": "e4a77b81-2299-4c54-8e10-c44d71239999",
+  "assignments": [
+    {
+      "assignment_id": "b1111111-2222-3333-4444-555555555555",
+      "node_id": "node-uuid-1",
+      "device_id": "41f62aae-ae2b-46bd-a413-d27cfc1ce7ff",
+      "task_type": "OCR",
+      "priority": 1,
+      "reason": "Assigned to Master Laptop (41f62aae...) - Selected with weighted score 0.970 (Battery: 95%, RAM: 32GB, CPU: 16 cores, Network: EXCELLENT)",
+      "estimated_duration": 2.0
+    },
+    {
+      "assignment_id": "c2222222-3333-4444-5555-666666666666",
+      "node_id": "node-uuid-2",
+      "device_id": "41f62aae-ae2b-46bd-a413-d27cfc1ce7ff",
+      "task_type": "SUMMARIZATION",
+      "priority": 1,
+      "reason": "Assigned to Master Laptop (41f62aae...) - Selected with weighted score 0.970 (Battery: 95%, RAM: 32GB, CPU: 16 cores, Network: EXCELLENT)",
+      "estimated_duration": 2.0
+    }
+  ],
+  "created_at": "2026-08-02T13:50:00Z"
+}
+```
+
+#### Error Response (409 Conflict - No Eligible Device Available):
+```json
+{
+  "error": "NoEligibleDeviceException",
+  "message": "Scheduling failed: no online and capable device available to execute task 'SUMMARIZATION'.",
+  "details": {
+    "task_type": "SUMMARIZATION"
+  }
+}
+```
+
+---
+
+### 2. Retrieve Generated ExecutionPlan
+- **URL**: `GET /api/v1/scheduler/{goal_id}`
+- **Description**: Retrieves the generated `ExecutionPlan` for a specific goal UUID.
+- **HTTP Success Code**: `200 OK`
+
+---
+
+## 🧮 Weighted Scoring Formula (`app/scheduler/scoring.py`)
+
+The `AdaptiveScheduler` ranks candidate edge nodes using a deterministic weighted scoring system:
+
+$$\text{Score} = (0.35 \times C) + (0.20 \times B) + (0.20 \times R) + (0.15 \times P) + (0.10 \times N)$$
+
+- $C$ (**Capability Match**): `1.0` if all required task capabilities are supported, else `0.0` (Hard Rejection).
+- $B$ (**Battery Level**): $\frac{\text{battery\_level}}{100.0}$ (Normalized $[0.0, 1.0]$).
+- $R$ (**RAM GB**): $\min\left(\frac{\text{ram\_gb}}{32.0}, 1.0\right)$ (Normalized against 32GB baseline).
+- $P$ (**CPU Cores**): $\min\left(\frac{\text{cpu\_cores}}{16.0}, 1.0\right)$ (Normalized against 16 cores baseline).
+- $N$ (**Network Quality**): `1.0` (EXCELLENT), `0.8` (GOOD), `0.5` (FAIR), `0.2` (POOR).
+
+---
+
 ## 🧪 Running Tests
 
 ```bash

@@ -94,3 +94,13 @@ class MissingCapabilityException(CogMeshException):
         super().__init__(message, status_code=409, details={"missing_capability": missing_capability})
 
 
+class NoEligibleDeviceException(CogMeshException):
+    """Raised when the scheduler cannot find any online or capable device for a specific task node."""
+
+    def __init__(self, task_type: str) -> None:
+        """Initialize no eligible device exception."""
+        message = f"Scheduling failed: no online and capable device available to execute task '{task_type}'."
+        super().__init__(message, status_code=409, details={"task_type": task_type})
+
+
+
