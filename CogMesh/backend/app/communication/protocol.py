@@ -43,3 +43,7 @@ def deserialize_message(raw_data: str) -> RuntimeMessage:
         return RuntimeMessage(**data)
     except (json.JSONDecodeError, ValidationError, TypeError) as e:
         raise ProtocolException(f"Invalid RuntimeMessage format: {str(e)}")
+
+
+parse_message = deserialize_message
+

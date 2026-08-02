@@ -798,6 +798,37 @@ TRANSLATION_PROVIDER=ollama
 
 ---
 
+## 🌐 Real Multi-Device Execution — Milestone 10C
+
+Milestone 10C enables real WebSocket-based communication between the CogMesh Master Server and remote edge devices (laptops, mobile phones, Raspberry Pis).
+
+```
+RuntimeOrchestrator
+        │
+        ▼
+Communication Layer (/api/v1/communication/ws/node/{device_id})
+        │
+        ▼
+WebSocket Transport
+        │
+        ▼
+Remote Edge Client (scripts/edge_node_client.py)
+        │
+        ▼
+AdapterFactory ──> BaseTaskAdapter ──> Provider ──> TaskResult
+```
+
+### Running a Remote Edge Client Node
+
+On any secondary laptop or edge device:
+
+```powershell
+cd CogMesh/backend
+.\venv\Scripts\python.exe scripts/edge_node_client.py --server-url ws://<MASTER_SERVER_IP>:8000 --device-id edge-node-02 --device-name "Secondary Laptop Edge Node"
+```
+
+---
+
 ## 🧪 Running Tests
 
 ```bash
