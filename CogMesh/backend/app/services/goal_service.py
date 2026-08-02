@@ -74,9 +74,21 @@ class GoalService:
 
         # 5. Extract constraints (e.g. target language if translation requested)
         constraints: Dict[str, Any] = {}
-        for lang in ["spanish", "french", "german", "hindi", "japanese", "chinese"]:
-            if lang in lower_text:
-                constraints["target_language"] = lang.capitalize()
+        import re
+        match = re.search(r"translate\s+(?:the\s+text\s+|the\s+document\s+|this\s+)?to\s+([a-zA-Z]+)", lower_text)
+        if match:
+            constraints["target_language"] = match.group(1).capitalize()
+        else:
+            languages = [
+                "malayalam", "tamil", "telugu", "bengali", "kannada", "marathi", "gujarati", "punjabi", "urdu",
+                "spanish", "french", "german", "hindi", "japanese", "chinese", "arabic", "italian", "russian",
+                "korean", "portuguese", "dutch", "turkish", "greek", "vietnamese", "thai", "indonesian"
+            ]
+            for lang in languages:
+                if lang in lower_text:
+                    constraints["target_language"] = lang.capitalize()
+                    break
+
 
         # Construct StructuredGoal
         structured_goal = StructuredGoal(
