@@ -456,6 +456,127 @@ $$\text{Score} = (0.35 \times C) + (0.20 \times B) + (0.20 \times R) + (0.15 \ti
 
 ---
 
+## ⚡ API Documentation — Runtime Orchestrator (Sprint 7)
+
+### 1. Dispatch ExecutionPlan Execution
+- **URL**: `POST /api/v1/runtime/start`
+- **Description**: Dispatches an `ExecutionPlan` through the `RuntimeOrchestrator`, enqueuing task assignments in an in-memory `ExecutionQueue` (FIFO), executing simulated task inference using `FakeExecutor`, emitting `RuntimeEvents`, and persisting logs (`TaskLog`) and metrics (`ExecutionMetric`) in SQLite.
+- **HTTP Success Code**: `200 OK`
+
+#### Request Payload Example:
+```json
+{
+  "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+}
+```
+
+#### Response Example (200 OK - ExecutionContext JSON):
+```json
+{
+  "context_id": "f8123456-7890-abcd-ef12-34567890abcd",
+  "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "status": "COMPLETED",
+  "task_states": {
+    "node-uuid-1": "COMPLETED",
+    "node-uuid-2": "COMPLETED"
+  },
+  "results": {
+    "node-uuid-1": {
+      "text": "Simulated extracted text from lecture document...",
+      "confidence": 0.98
+    },
+    "node-uuid-2": {
+      "summary": "Simulated summary of lecture text..."
+    }
+  },
+  "metrics": {
+    "node-uuid-1": {
+      "execution_time_ms": 52.4,
+      "cpu_usage_percent": 35.5,
+      "ram_usage_mb": 128.0,
+      "energy_cost_joules": 4.2
+    }
+  },
+  "events": [
+    {
+      "event_id": "evt-1",
+      "event_type": "PLAN_STARTED",
+      "context_id": "f8123456-7890-abcd-ef12-34567890abcd",
+      "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+      "message": "Execution plan 'plan-uuid' started with 2 task assignments.",
+      "timestamp": "2026-08-02T13:55:00Z"
+    },
+    {
+      "event_id": "evt-2",
+      "event_type": "TASK_READY",
+      "node_id": "node-uuid-1",
+      "device_id": "41f62aae-ae2b-46bd-a413-d27cfc1ce7ff",
+      "message": "Task 'OCR' (node-uuid-1) is READY for device '41f62aae...'.",
+      "timestamp": "2026-08-02T13:55:00Z"
+    },
+    {
+      "event_id": "evt-3",
+      "event_type": "TASK_STARTED",
+      "node_id": "node-uuid-1",
+      "device_id": "41f62aae-ae2b-46bd-a413-d27cfc1ce7ff",
+      "message": "Task 'OCR' (node-uuid-1) started on device '41f62aae...'.",
+      "timestamp": "2026-08-02T13:55:00Z"
+    },
+    {
+      "event_id": "evt-4",
+      "event_type": "TASK_COMPLETED",
+      "node_id": "node-uuid-1",
+      "device_id": "41f62aae-ae2b-46bd-a413-d27cfc1ce7ff",
+      "message": "Task 'OCR' (node-uuid-1) COMPLETED successfully.",
+      "timestamp": "2026-08-02T13:55:01Z"
+    },
+    {
+      "event_id": "evt-5",
+      "event_type": "PLAN_COMPLETED",
+      "message": "Execution plan 'plan-uuid' completed successfully.",
+      "timestamp": "2026-08-02T13:55:02Z"
+    }
+  ]
+}
+```
+
+---
+
+### 2. Get Real-Time Runtime Status
+- **URL**: `GET /api/v1/runtime/status/{context_id}`
+- **Description**: Retrieves in-memory `ExecutionContext` by UUID.
+- **HTTP Success Code**: `200 OK`
+
+---
+
+### 3. Cancel Active Execution Context
+- **URL**: `POST /api/v1/runtime/cancel/{context_id}`
+- **Description**: Aborts execution for an active context and marks non-terminal tasks as `CANCELLED`.
+- **HTTP Success Code**: `200 OK`
+
+---
+
+## 🔄 Task State Machine Lifecycle
+
+```
+    [ PENDING ]
+         |
+         +--------------------> [ CANCELLED ] (Terminal)
+         |                           ^
+         v                           |
+     [ READY ] ----------------------+
+         |                           |
+         v                           |
+    [ RUNNING ] ---------------------+
+         |
+         +--------------------> [ FAILED ]    (Terminal)
+         |
+         v
+    [ COMPLETED ]                             (Terminal)
+```
+
+---
+
 ## 🧪 Running Tests
 
 ```bash

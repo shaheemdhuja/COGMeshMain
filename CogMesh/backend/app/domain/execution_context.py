@@ -1,10 +1,12 @@
 """Domain object representing the in-memory runtime execution context for a goal workflow."""
 
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from app.domain.structured_goal import StructuredGoal
+from app.runtime.enums import RuntimeStatus
+from app.runtime.events import RuntimeEvent
 
 
 class ExecutionContext(BaseModel):
@@ -17,6 +19,10 @@ class ExecutionContext(BaseModel):
     goal_id: str = Field(
         ...,
         description="ID of the goal associated with this execution context.",
+    )
+    status: RuntimeStatus = Field(
+        default=RuntimeStatus.IDLE,
+        description="Overall execution status of the runtime context.",
     )
     goal: Optional[StructuredGoal] = Field(
         default=None,
@@ -46,3 +52,8 @@ class ExecutionContext(BaseModel):
         default_factory=dict,
         description="Runtime execution performance metrics (task_id -> metric telemetry).",
     )
+    events: List[RuntimeEvent] = Field(
+        default_factory=list,
+        description="Chronological stream of emitted runtime events.",
+    )
+
