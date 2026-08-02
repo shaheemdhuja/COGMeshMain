@@ -653,6 +653,107 @@ $$\text{Score} = (0.35 \times C) + (0.20 \times B) + (0.20 \times R) + (0.15 \ti
 
 ---
 
+## 🤖 API Documentation — AI Task Adapter Layer (Sprint 9)
+
+### 1. List Registered Task Adapters
+- **URL**: `GET /api/v1/tasks`
+- **Description**: Retrieves metadata summaries for all registered AI task adapters.
+- **HTTP Success Code**: `200 OK`
+
+#### Response Example (200 OK):
+```json
+[
+  {
+    "task_type": "OCR",
+    "adapter_name": "OCRAdapter",
+    "provider_name": "MockOCRProvider",
+    "model_name": "mock-tesseract-v5",
+    "supported_capabilities": ["OCR"]
+  },
+  {
+    "task_type": "SUMMARIZATION",
+    "adapter_name": "SummaryAdapter",
+    "provider_name": "MockGemmaProvider",
+    "model_name": "mock-gemma-2b",
+    "supported_capabilities": ["SUMMARIZATION"]
+  }
+]
+```
+
+---
+
+### 2. Execute Task via Adapter Layer
+- **URL**: `POST /api/v1/tasks/execute`
+- **Description**: Executes an AI task through `TaskRegistry` $\rightarrow$ `AdapterFactory` $\rightarrow$ `BaseTaskAdapter`, records an audit entry in SQLite (`task_execution_audits`), and returns a `TaskResult`.
+- **HTTP Success Code**: `200 OK`
+
+#### Request Payload Example:
+```json
+{
+  "task_type": "OCR",
+  "input_data": {
+    "page": 1,
+    "language": "English"
+  }
+}
+```
+
+#### Response Example (200 OK - TaskResult JSON):
+```json
+{
+  "task_id": "res-uuid-100",
+  "status": "SUCCESS",
+  "output": {
+    "text": "Extracted lecture notes: CogMesh architecture enables distributed edge intelligence...",
+    "confidence": 0.985,
+    "word_count": 13,
+    "page_number": 1
+  },
+  "execution_time_ms": 20.4,
+  "adapter_name": "OCRAdapter",
+  "provider_name": "MockOCRProvider",
+  "model_name": "mock-tesseract-v5",
+  "metadata": {
+    "simulated": true
+  }
+}
+```
+
+---
+
+## 🧩 Task Adapter Layer Architecture (`app/tasks/`)
+
+```
++-------------------------------------------------------------------------------+
+|                             RuntimeOrchestrator                               |
++-------------------------------------------------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|                                 TaskRegistry                                  |
+|                 (Maintains TaskType -> AdapterClass mappings)                |
++-------------------------------------------------------------------------------+
+                                        |
+                                        v
++-------------------------------------------------------------------------------+
+|                                AdapterFactory                                 |
+|                     (Instantiates BaseTaskAdapter subclass)                   |
++-------------------------------------------------------------------------------+
+                                        |
+         +------------------------------+------------------------------+
+         |                              |                              |
+         v                              v                              v
++------------------+          +------------------+          +------------------+
+|    OCRAdapter    |          |  SummaryAdapter  |          |   MCQAdapter     |
+| (MockOCRProvider)|          | (MockGemmaProvid)|          | (MockLlamaProvid)|
++------------------+          +------------------+          +------------------+
+         |                              |                              |
+         v                              v                              v
+  [ AI Model Engine ]            [ AI Model Engine ]            [ AI Model Engine ]
+```
+
+---
+
 ## 🧪 Running Tests
 
 ```bash

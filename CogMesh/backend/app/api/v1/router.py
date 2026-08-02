@@ -9,6 +9,7 @@ from app.api.v1.endpoints import (
     health,
     runtime,
     scheduler,
+    tasks,
     workflows,
 )
 
@@ -21,6 +22,8 @@ api_router.include_router(workflows.router)
 api_router.include_router(scheduler.router)
 api_router.include_router(runtime.router)
 api_router.include_router(communication.router)
+api_router.include_router(tasks.router)
+
 
 
 

@@ -35,42 +35,31 @@ class FakeExecutor:
 
         elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-        # Mock results based on task type
-        mock_output: Dict[str, Any]
-        if assignment.task_type == TaskType.OCR:
-            mock_output = {
-                "text": "Simulated extracted text from lecture document...",
-                "confidence": 0.98,
-                "word_count": 142,
-            }
-        elif assignment.task_type == TaskType.SUMMARIZATION:
-            mock_output = {
-                "summary": "Simulated summary of lecture text focusing on distributed edge intelligence...",
-                "compression_ratio": 0.35,
-            }
-        elif assignment.task_type == TaskType.TRANSLATION:
-            mock_output = {
-                "translated_text": "Texto simulado de la conferencia sobre inteligencia distribuida...",
-                "target_language": "Spanish",
-            }
-        elif assignment.task_type == TaskType.MCQ_GENERATION:
-            mock_output = {
-                "questions": [
-                    {
-                        "q": "What is CogMesh?",
-                        "options": ["Edge AI Runtime", "Database", "Operating System"],
-                        "answer": "Edge AI Runtime",
-                    }
-                ]
-            }
-        else:
-            mock_output = {"output": f"Simulated output for operation {assignment.task_type.value}"}
+        # Execute task through AI Task Adapter Layer (AdapterFactory -> TaskAdapter)
+        from app.tasks.factory import AdapterFactory
+
+        task_type_str = str(assignment.task_type.value)
+        try:
+            adapter = AdapterFactory.create_adapter(task_type_str)
+            task_result = await adapter.execute({"node_id": assignment.node_id})
+            mock_output = task_result.output
+            adapter_name = task_result.adapter_name
+            provider_name = task_result.provider_name
+            model_name = task_result.model_name
+        except Exception:
+            mock_output = {"output": f"Simulated output for operation {task_type_str}"}
+            adapter_name = "DefaultAdapter"
+            provider_name = "DefaultProvider"
+            model_name = "default-model"
 
         result = {
             "node_id": assignment.node_id,
             "device_id": assignment.device_id,
-            "task_type": assignment.task_type.value,
+            "task_type": task_type_str,
             "status": "COMPLETED",
+            "adapter_name": adapter_name,
+            "provider_name": provider_name,
+            "model_name": model_name,
             "output": mock_output,
             "metrics": {
                 "execution_time_ms": elapsed_ms,
@@ -81,6 +70,8 @@ class FakeExecutor:
         }
 
         logger.info(
-            f"[FakeExecutor] Completed task '{assignment.task_type.value}' ({assignment.node_id}) in {elapsed_ms}ms"
+            f"[FakeExecutor] Completed task '{task_type_str}' ({assignment.node_id}) "
+            f"via adapter '{adapter_name}' in {elapsed_ms}ms"
         )
         return result
+
