@@ -577,6 +577,82 @@ $$\text{Score} = (0.35 \times C) + (0.20 \times B) + (0.20 \times R) + (0.15 \ti
 
 ---
 
+## 📡 API Documentation — Mesh Communication Layer (Sprint 8)
+
+### 1. List Active Runtime Node Connections
+- **URL**: `GET /api/v1/communication/connections`
+- **Description**: Retrieves all active or managed `Connection` objects tracked by the `ConnectionManager`.
+- **HTTP Success Code**: `200 OK`
+
+#### Response Example (200 OK):
+```json
+[
+  {
+    "connection_id": "conn-uuid-1",
+    "node_id": "device-uuid-100",
+    "status": "CONNECTED",
+    "last_seen": "2026-08-02T14:05:00Z",
+    "transport": "WEBSOCKET"
+  }
+]
+```
+
+---
+
+### 2. List Recent Transmitted RuntimeMessages
+- **URL**: `GET /api/v1/communication/messages`
+- **Description**: Retrieves recent `RuntimeMessage` protocol audit logs transmitted across the transport adapter.
+- **HTTP Success Code**: `200 OK`
+
+#### Response Example (200 OK):
+```json
+[
+  {
+    "message_id": "msg-uuid-1",
+    "message_type": "TASK_ASSIGNMENT",
+    "source_node": "ORCHESTRATOR",
+    "destination_node": "device-uuid-100",
+    "timestamp": "2026-08-02T14:05:01Z",
+    "payload": {
+      "task_id": "node-uuid-1",
+      "task_type": "OCR"
+    }
+  }
+]
+```
+
+---
+
+## 🏗️ Transport Abstraction Architecture (`app/communication/`)
+
+```
++-------------------------------------------------------------------------------+
+|                             RuntimeOrchestrator                               |
++-------------------------------------------------------------------------------+
+                                        |
+                                        v  (Depends ONLY on Abstract Transport Interface)
++-------------------------------------------------------------------------------+
+|                              Transport Interface                              |
+|   connect() | disconnect() | send() | broadcast() | receive()                 |
++-------------------------------------------------------------------------------+
+                                        |
+                   +--------------------+--------------------+
+                   |                                         |
+                   v                                         v
++------------------------------------+    +------------------------------------+
+|          WebSocketAdapter          |    |        (Future Adapters)           |
+| (Manages websockets & message log) |    |   (gRPC, HTTP Long Polling, etc.)  |
++------------------------------------+    +------------------------------------+
+                   |
+                   v
++-------------------------------------------------------------------------------+
+|                              ConnectionManager                                |
+|           (Tracks active nodes, session freshness & last_seen)                 |
++-------------------------------------------------------------------------------+
+```
+
+---
+
 ## 🧪 Running Tests
 
 ```bash
