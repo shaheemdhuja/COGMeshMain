@@ -84,3 +84,13 @@ class WorkflowException(CogMeshException):
         """Initialize workflow exception."""
         super().__init__(message, status_code=400, details=details)
 
+
+class MissingCapabilityException(CogMeshException):
+    """Raised when workflow generation fails due to missing capability constraint in the mesh."""
+
+    def __init__(self, missing_capability: str) -> None:
+        """Initialize missing capability exception."""
+        message = f"Workflow generation failed: required capability '{missing_capability}' is not supported by any active device in the mesh."
+        super().__init__(message, status_code=409, details={"missing_capability": missing_capability})
+
+

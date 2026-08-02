@@ -292,6 +292,92 @@ CogMesh is a modular, high-performance distributed edge AI runtime that coordina
 
 ---
 
+## 🔀 API Documentation — Workflow Generator (Sprint 5)
+
+### 1. Generate Capability-Constrained ExecutionDAG
+- **URL**: `POST /api/v1/workflows/generate`
+- **Description**: Validates capability constraints across active mesh nodes, generates an `ExecutionDAG`, optimizes the DAG (duplicate node removal, edge compaction), and persists the workflow definition in SQLite.
+- **HTTP Success Code**: `200 OK`
+
+#### Request Payload Example:
+```json
+{
+  "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+}
+```
+
+#### Response Example (200 OK - ExecutionDAG JSON):
+```json
+{
+  "dag_id": "e4a77b81-2299-4c54-8e10-c44d71239999",
+  "goal_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "nodes": {
+    "node-uuid-1": {
+      "node_id": "node-uuid-1",
+      "task_type": "OCR",
+      "dependencies": [],
+      "required_capabilities": ["OCR"],
+      "status": "PENDING",
+      "estimated_cost": 1.0,
+      "metadata": { "original_operation": "OCR" }
+    },
+    "node-uuid-2": {
+      "node_id": "node-uuid-2",
+      "task_type": "SUMMARIZATION",
+      "dependencies": ["node-uuid-1"],
+      "required_capabilities": ["SUMMARIZATION"],
+      "status": "PENDING",
+      "estimated_cost": 1.0,
+      "metadata": { "original_operation": "SUMMARIZATION" }
+    }
+  },
+  "edges": [
+    {
+      "edge_id": "edge-uuid-1",
+      "source": "node-uuid-1",
+      "destination": "node-uuid-2"
+    }
+  ]
+}
+```
+
+#### Error Response (409 Conflict - Missing Capability Constraint Violation):
+```json
+{
+  "error": "MissingCapabilityException",
+  "message": "Workflow generation failed: required capability 'SUMMARIZATION' is not supported by any active device in the mesh.",
+  "details": {
+    "missing_capability": "SUMMARIZATION"
+  }
+}
+```
+
+---
+
+### 2. Retrieve Generated Workflow
+- **URL**: `GET /api/v1/workflows/{goal_id}`
+- **Description**: Retrieves the generated `ExecutionDAG` graph for a specific goal UUID.
+- **HTTP Success Code**: `200 OK`
+
+---
+
+## ⚙️ Workflow Subsystem Architecture (`app/workflow/`)
+
+```
+backend/app/workflow/
+├── enums.py         # TaskType, NodeStatus, WorkflowStatus
+├── node.py          # ExecutionNode (task_type, dependencies, required_capabilities)
+├── edge.py          # ExecutionEdge (source -> destination dependency link)
+├── dag.py           # ExecutionDAG graph (add_node, add_edge, validate, topological_sort)
+├── generator.py     # WorkflowGenerator (capability constraint validation & graph creation)
+└── optimizer.py     # WorkflowOptimizer (consecutive duplicate node removal & edge compaction)
+```
+
+> [!IMPORTANT]
+> **Device Independence**: The `WorkflowGenerator` subsystem validates capability requirements against active mesh capability snapshots but **NEVER** interacts with devices, assigns nodes, or performs scheduling. The generated `ExecutionDAG` is passed to the Scheduler in downstream sprints.
+
+---
+
 ## 🧪 Running Tests
 
 ```bash
