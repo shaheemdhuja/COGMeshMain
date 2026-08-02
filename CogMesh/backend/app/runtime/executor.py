@@ -36,15 +36,23 @@ class RealTaskExecutor:
         input_data: Dict[str, Any] = payload_input or {}
         if context and hasattr(context, "goal") and context.goal:
             goal_obj = context.goal
-            if hasattr(goal_obj, "constraints") and isinstance(goal_obj.constraints, dict):
-                if "target_language" in goal_obj.constraints:
-                    input_data["target_lang"] = goal_obj.constraints["target_language"]
-            if hasattr(goal_obj, "natural_language_input"):
-                input_data["user_prompt"] = goal_obj.natural_language_input
-            if hasattr(goal_obj, "metadata") and isinstance(goal_obj.metadata, dict):
-                if "file_path" in goal_obj.metadata and goal_obj.metadata["file_path"]:
-                    input_data["file_path"] = goal_obj.metadata["file_path"]
-                    input_data["image_path"] = goal_obj.metadata["file_path"]
+
+            # Extract constraints
+            constraints = getattr(goal_obj, "constraints", None) or (goal_obj.get("constraints") if isinstance(goal_obj, dict) else None)
+            if isinstance(constraints, dict) and "target_language" in constraints:
+                input_data["target_lang"] = constraints["target_language"]
+
+            # Extract prompt
+            prompt = getattr(goal_obj, "natural_language_input", None) or (goal_obj.get("natural_language_input") if isinstance(goal_obj, dict) else None)
+            if prompt:
+                input_data["user_prompt"] = prompt
+
+            # Extract metadata file_path
+            metadata = getattr(goal_obj, "metadata", None) or (goal_obj.get("metadata") if isinstance(goal_obj, dict) else None)
+            if isinstance(metadata, dict) and metadata.get("file_path"):
+                input_data["file_path"] = metadata["file_path"]
+                input_data["image_path"] = metadata["file_path"]
+
 
 
         if context and hasattr(context, "results") and context.results:
