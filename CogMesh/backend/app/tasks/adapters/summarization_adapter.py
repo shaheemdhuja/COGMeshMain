@@ -56,14 +56,16 @@ class SummaryAdapter(BaseTaskAdapter):
         elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
 
         if "error" in ollama_res:
-            # Graceful fallback summary payload if Ollama endpoint unavailable
+            # Graceful fallback summary payload derived from actual text content
+            summary_text = f"Summary: {text_content[:250]}" if len(text_content) > 10 else "Summary: CogMesh architecture enables distributed edge intelligence across multi-device execution nodes."
             output = {
-                "summary": "Summary: CogMesh architecture enables distributed edge intelligence across multi-device execution nodes.",
+                "summary": summary_text,
                 "compression_ratio": 0.35,
                 "provider": self.provider_name,
                 "model": self.model_name,
                 "note": ollama_res.get("error"),
             }
+
         else:
             output = {
                 "summary": ollama_res.get("response", "").strip(),

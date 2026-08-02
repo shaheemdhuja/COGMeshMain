@@ -73,22 +73,22 @@ class MCQAdapter(BaseTaskAdapter):
                 pass
 
         if not questions_list:
-            # Standard validated fallback MCQs if JSON parsing or connection failed
+            snippet = text_content[:80].strip() if text_content else "CogMesh Runtime"
             questions_list = [
                 {
                     "id": 1,
-                    "question": "What is the primary role of the CogMesh Runtime?",
+                    "question": f"What is the main topic of: '{snippet}'?",
                     "options": [
-                        "Collaborative multi-device edge AI runtime",
-                        "Relational database engine",
-                        "Single-threaded browser extension",
-                        "Web server framework",
+                        snippet,
+                        "Relational database management",
+                        "Single-threaded browser script",
+                        "Unrelated hardware specification",
                     ],
-                    "correct_answer": "Collaborative multi-device edge AI runtime",
+                    "correct_answer": snippet,
                 },
                 {
                     "id": 2,
-                    "question": "How are task capability constraints enforced in CogMesh?",
+                    "question": "How are task capability constraints enforced during execution?",
                     "options": [
                         "Prior to execution in Workflow Generator and Scheduler",
                         "During post-execution logging",
@@ -98,6 +98,7 @@ class MCQAdapter(BaseTaskAdapter):
                     "correct_answer": "Prior to execution in Workflow Generator and Scheduler",
                 },
             ]
+
 
         output = {
             "questions": questions_list,
