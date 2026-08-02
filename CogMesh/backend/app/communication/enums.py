@@ -15,8 +15,10 @@ class MessageType(str, Enum):
     TASK_STARTED = "TASK_STARTED"
     TASK_COMPLETED = "TASK_COMPLETED"
     TASK_FAILED = "TASK_FAILED"
+    TASK_RESULT = "TASK_RESULT"
     RESULT = "RESULT"
     ERROR = "ERROR"
+
 
 
 class ConnectionStatus(str, Enum):
