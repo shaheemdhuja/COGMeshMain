@@ -3,15 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/runtime_provider.dart';
 import '../widgets/dag_painter.dart';
 
-class WorkflowScreen extends ConsumerWidget {
+class WorkflowScreen extends ConsumerStatefulWidget {
   const WorkflowScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final runtimeState = ref.watch(runtimeProvider);
-    final promptController = TextEditingController(
+  ConsumerState<WorkflowScreen> createState() => _WorkflowScreenState();
+}
+
+class _WorkflowScreenState extends ConsumerState<WorkflowScreen> {
+  late final TextEditingController _promptController;
+
+  @override
+  void initState() {
+    super.initState();
+    _promptController = TextEditingController(
       text: 'Perform OCR on lecture PDF, summarize text, translate to Spanish and generate MCQs.',
     );
+  }
+
+  @override
+  void dispose() {
+    _promptController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final runtimeState = ref.watch(runtimeProvider);
 
     return Scaffold(
       body: Padding(
@@ -30,7 +48,7 @@ class WorkflowScreen extends ConsumerWidget {
                     Text('Natural Language Goal Input', style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 12),
                     TextField(
-                      controller: promptController,
+                      controller: _promptController,
                       maxLines: 2,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
@@ -42,7 +60,7 @@ class WorkflowScreen extends ConsumerWidget {
                       onPressed: runtimeState.isLoading
                           ? null
                           : () {
-                              ref.read(runtimeProvider.notifier).runEndToEndPipeline(promptController.text);
+                              ref.read(runtimeProvider.notifier).runEndToEndPipeline(_promptController.text);
                             },
                       icon: runtimeState.isLoading
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
@@ -68,3 +86,4 @@ class WorkflowScreen extends ConsumerWidget {
     );
   }
 }
+
