@@ -9,9 +9,10 @@ from loguru import logger
 from app.domain.structured_goal import StructuredGoal
 from app.runtime.enums import RuntimeEventType, RuntimeStatus, TaskState
 from app.runtime.events import RuntimeEvent
-from app.runtime.executor import FakeExecutor
+from app.runtime.executor import FakeExecutor, RealTaskExecutor
 from app.runtime.queue import ExecutionQueue
 from app.runtime.state_machine import TaskStateMachine
+
 from app.scheduler.planner import ExecutionPlan
 from app.workflow.dag import ExecutionDAG
 
@@ -135,12 +136,27 @@ class RuntimeOrchestrator:
                     device_id=dev_id,
                 )
 
-                # Simulate AI task execution via FakeExecutor
-                task_result = await FakeExecutor.execute_task(
+                # Execute AI task via RealTaskExecutor (AdapterFactory -> BaseTaskAdapter -> Provider)
+                task_result = await RealTaskExecutor.execute_task(
                     assignment=assignment,
                     context=context,
                     simulated_delay=simulated_delay,
                 )
+
+                if task_result.get("status") == "FAILED":
+                    failed_st = TaskStateMachine.transition(running_st, TaskState.FAILED)
+                    context.task_states[node_id] = failed_st.value
+                    context.status = RuntimeStatus.FAILED
+                    error_msg = task_result.get("error", "Task execution failed")
+                    cls.emit_event(
+                        context,
+                        RuntimeEventType.TASK_FAILED,
+                        f"Task '{assignment.task_type.value}' ({node_id}) FAILED: {error_msg}",
+                        node_id=node_id,
+                        device_id=dev_id,
+                        payload={"error": error_msg},
+                    )
+                    break
 
                 # Transition RUNNING -> COMPLETED
                 completed_st = TaskStateMachine.transition(running_st, TaskState.COMPLETED)
@@ -170,6 +186,7 @@ class RuntimeOrchestrator:
                     device_id=dev_id,
                 )
                 break
+
 
         # 5. Finalize context status
         if context.status == RuntimeStatus.RUNNING:
