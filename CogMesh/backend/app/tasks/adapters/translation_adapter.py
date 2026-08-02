@@ -48,9 +48,24 @@ class TranslationAdapter(BaseTaskAdapter):
                 output={"error": "Invalid input format"},
             )
 
-        text_content = input_data.get("text", "CogMesh architecture enables collaborative multi-device edge intelligence.")
+        text_content = input_data.get("text")
+        if not text_content and "user_prompt" in input_data:
+            prompt_str = input_data["user_prompt"]
+            import re
+            match = re.search(r'["\']([^"\']+)["\']', prompt_str)
+            if match:
+                text_content = match.group(1)
+            else:
+                match_phrase = re.search(r"translate\s+(?:the\s+text\s+|the\s+document\s+|this\s+)?(.+?)\s+to\s+[a-zA-Z]+", prompt_str, re.IGNORECASE)
+                if match_phrase:
+                    text_content = match_phrase.group(1).strip()
+
+        if not text_content:
+            text_content = "CogMesh architecture enables collaborative multi-device edge intelligence."
+
         source_lang = input_data.get("source_lang", "English")
         target_lang = input_data.get("target_lang", "Spanish")
+
 
         trans_res = await self.provider.translate(
             text=text_content,
