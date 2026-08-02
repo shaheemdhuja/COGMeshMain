@@ -31,34 +31,34 @@ This report documents the empirical evaluation of **CogMesh**, a heterogeneous m
 
 ### 3.1 Experiment 1: Single Device Baseline Execution
 - **Iterations:** 10
-- **Mean End-to-End Latency ($T_1$):** `80.77 ms`
-- **Median Latency:** `80.61 ms`
-- **Standard Deviation ($\sigma$):** `1.55 ms`
+- **Mean End-to-End Latency ($T_1$):** `81.25 ms`
+- **Median Latency:** `80.72 ms`
+- **Standard Deviation ($\sigma$):** `1.33 ms`
 
 | Task Stage | Mean Latency (ms) | Std Dev (ms) | Peak CPU (%) | RAM (MB) |
 | :--- | :--- | :--- | :--- | :--- |
-| **OCR (Tesseract)** | `20.50` | `0.78` | 32.4% | 412 MB |
-| **Summarization (Gemma)** | `19.94` | `0.58` | 35.1% | 435 MB |
-| **Translation** | `19.98` | `0.65` | 31.8% | 418 MB |
-| **MCQ Generation** | `20.34` | `0.82` | 34.0% | 425 MB |
+| **OCR (Tesseract)** | `20.06` | `0.74` | 32.4% | 412 MB |
+| **Summarization (Gemma)** | `20.10` | `0.83` | 35.1% | 435 MB |
+| **Translation** | `20.01` | `0.83` | 31.8% | 418 MB |
+| **MCQ Generation** | `21.09` | `0.74` | 34.0% | 425 MB |
 
 ---
 
 ### 3.2 Experiment 2: Multi-Device Distributed Execution & Speedup
 - **Iterations:** 10
-- **Mean End-to-End Latency ($T_N$):** `44.05 ms`
-- **Median Latency:** `43.75 ms`
-- **Standard Deviation ($\sigma$):** `1.21 ms`
-- **Measured Speedup ($S = T_1 / T_N$):** **`1.83x`**
+- **Mean End-to-End Latency ($T_N$):** `43.11 ms`
+- **Median Latency:** `42.95 ms`
+- **Standard Deviation ($\sigma$):** `0.76 ms`
+- **Measured Speedup ($S = T_1 / T_N$):** **`1.88x`**
 
-By offloading independent sub-tasks (`Translation` and `MCQ Generation`) over WebSocket transport to edge nodes, CogMesh achieves a **`1.83x` speedup** compared to single-device local execution.
+By offloading independent sub-tasks (`Translation` and `MCQ Generation`) over WebSocket transport to edge nodes, CogMesh achieves a **`1.88x` speedup** compared to single-device local execution.
 
 ---
 
 ### 3.3 Experiment 3: Capability-Constrained vs Round-Robin Scheduling
-- **Round-Robin Baseline Mean Execution:** `109.24 ms` (Task Failure Rate: 30%)
-- **CogMesh Capability-Constrained Mean Execution:** `48.17 ms` (Task Failure Rate: **0%**)
-- **Efficiency Improvement:** **`55.9%` reduction in execution time**
+- **Round-Robin Baseline Mean Execution:** `108.79 ms` (Task Failure Rate: 30%)
+- **CogMesh Capability-Constrained Mean Execution:** `48.24 ms` (Task Failure Rate: **0%**)
+- **Efficiency Improvement:** **`55.7%` reduction in execution time**
 
 ```
 Capability-Constrained Match Score: 98.4%
@@ -68,12 +68,12 @@ Round-Robin Match Score:            62.1%
 ---
 
 ### 3.4 Experiment 4: Node Disconnection & Fault Tolerance
-- **Mean Failure Detection Latency:** `140.08 ms`
-- **Mean Task Reassignment Latency:** `66.69 ms`
-- **Total Recovery Time:** `206.78 ms`
+- **Mean Failure Detection Latency:** `149.98 ms`
+- **Mean Task Reassignment Latency:** `65.90 ms`
+- **Total Recovery Time:** `215.89 ms`
 - **Task Completion Success Rate:** **`100.0%`**
 
-When an active edge node is suddenly disconnected during task execution, the `ConnectionManager` flags the session as `STALE`/`OFFLINE` within `140.1 ms`. The `RuntimeOrchestrator` traps the socket exception, emits a `TASK_FAILED` runtime event, and automatically reschedules pending tasks to available healthy nodes without dropping pipeline execution.
+When an active edge node is suddenly disconnected during task execution, the `ConnectionManager` flags the session as `STALE`/`OFFLINE` within `150.0 ms`. The `RuntimeOrchestrator` traps the socket exception, emits a `TASK_FAILED` runtime event, and automatically reschedules pending tasks to available healthy nodes without dropping pipeline execution.
 
 ---
 
@@ -81,9 +81,9 @@ When an active edge node is suddenly disconnected during task execution, the `Co
 
 | Number of Nodes | End-to-End Latency (ms) | Throughput (tasks/sec) | Scheduler Overhead (ms) |
 | :--- | :--- | :--- | :--- |
-| **1 Node** | `81.04` | `49.38` | `1.53` |
-| **2 Nodes** | `45.79` | `87.40` | `3.06` |
-| **3 Nodes** | `33.88` | `118.18` | `4.51` |
+| **1 Node** | `81.47` | `49.11` | `1.59` |
+| **2 Nodes** | `45.62` | `87.72` | `3.34` |
+| **3 Nodes** | `33.87` | `118.32` | `4.44` |
 
 ---
 
@@ -107,4 +107,4 @@ The following publication-ready SVG and PNG charts have been generated in `evalu
 
 ## 6. Conclusion
 
-The empirical evaluation conclusively demonstrates that **CogMesh** achieves a **`1.83x` speedup** through distributed edge collaboration, reduces execution latency by **`55.9%`** using capability-constrained scheduling, and guarantees **100% fault tolerance recovery** under abrupt node disconnects.
+The empirical evaluation conclusively demonstrates that **CogMesh** achieves a **`1.88x` speedup** through distributed edge collaboration, reduces execution latency by **`55.7%`** using capability-constrained scheduling, and guarantees **100% fault tolerance recovery** under abrupt node disconnects.

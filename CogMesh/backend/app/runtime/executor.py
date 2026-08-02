@@ -34,6 +34,14 @@ class RealTaskExecutor:
 
         # Prepare input data for task execution chaining
         input_data: Dict[str, Any] = payload_input or {}
+        if context and hasattr(context, "goal") and context.goal:
+            goal_obj = context.goal
+            if hasattr(goal_obj, "constraints") and isinstance(goal_obj.constraints, dict):
+                if "target_language" in goal_obj.constraints:
+                    input_data["target_lang"] = goal_obj.constraints["target_language"]
+            if hasattr(goal_obj, "natural_language_input"):
+                input_data["user_prompt"] = goal_obj.natural_language_input
+
         if context and hasattr(context, "results") and context.results:
             input_data.setdefault("node_id", assignment.node_id)
             for prev_output in context.results.values():
@@ -42,6 +50,7 @@ class RealTaskExecutor:
                         input_data["text"] = prev_output["text"]
                     if "summary" in prev_output and "text" not in input_data:
                         input_data["text"] = prev_output["summary"]
+
 
         status = "COMPLETED"
         error_msg: Optional[str] = None
