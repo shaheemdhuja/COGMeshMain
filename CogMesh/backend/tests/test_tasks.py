@@ -33,8 +33,8 @@ def test_adapter_factory_create_adapter() -> None:
     ocr_adapter = AdapterFactory.create_adapter("OCR")
     assert isinstance(ocr_adapter, OCRAdapter)
     assert ocr_adapter.adapter_name == "OCRAdapter"
-    assert ocr_adapter.provider_name == "MockOCRProvider"
-    assert ocr_adapter.model_name == "mock-tesseract-v5"
+    assert ocr_adapter.provider_name == "TesseractProvider"
+    assert ocr_adapter.model_name == "tesseract-ocr"
 
     summary_adapter = AdapterFactory.create_adapter("SUMMARIZATION")
     assert isinstance(summary_adapter, SummaryAdapter)
@@ -57,8 +57,9 @@ async def test_ocr_adapter_execution() -> None:
     assert result.status == TaskStatus.SUCCESS
     assert "text" in result.output
     assert result.adapter_name == "OCRAdapter"
-    assert result.provider_name == "MockOCRProvider"
-    assert result.model_name == "mock-tesseract-v5"
+    assert result.provider_name == "TesseractProvider"
+    assert result.model_name == "tesseract-ocr"
+
 
 
 @pytest.mark.asyncio
@@ -133,8 +134,9 @@ async def test_tasks_api_execute_task_ocr(client: AsyncClient) -> None:
     assert res.status_code == 200
     data = res.json()
     assert data["adapter_name"] == "OCRAdapter"
-    assert data["provider_name"] == "MockOCRProvider"
+    assert data["provider_name"] == "TesseractProvider"
     assert "text" in data["output"]
+
 
 
 @pytest.mark.asyncio
