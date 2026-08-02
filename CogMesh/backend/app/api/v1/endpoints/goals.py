@@ -22,4 +22,5 @@ async def parse_goal(
     db: AsyncSession = Depends(get_db),
 ) -> StructuredGoal:
     """Transform a natural language user request into an internal StructuredGoal object."""
-    return await GoalService.parse_and_store_goal(db, request.goal)
+    return await GoalService.parse_and_store_goal(db, request.goal, file_path=request.file_path)
+

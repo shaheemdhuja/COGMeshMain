@@ -31,17 +31,23 @@ class ApiClient {
   }
 
   // Parse Natural Language Goal
-  Future<Map<String, dynamic>> parseGoal(String goalText) async {
+  Future<Map<String, dynamic>> parseGoal(String goalText, {String? filePath}) async {
+    final Map<String, dynamic> bodyData = {'goal': goalText};
+    if (filePath != null && filePath.isNotEmpty) {
+      bodyData['file_path'] = filePath;
+    }
+
     final response = await _client.post(
       Uri.parse('${AppConstants.baseUrl}/goals/parse'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'goal': goalText}),
+      body: jsonEncode(bodyData),
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     }
     throw Exception('Failed to parse goal: ${response.body}');
   }
+
 
   // Generate ExecutionDAG
   Future<Map<String, dynamic>> generateWorkflow(String goalId) async {

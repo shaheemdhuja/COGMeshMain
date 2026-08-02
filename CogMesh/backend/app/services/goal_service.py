@@ -15,7 +15,7 @@ class GoalService:
     """Service layer converting natural language user goals into StructuredGoal domain objects."""
 
     @staticmethod
-    def parse_natural_language(natural_language_goal: str) -> StructuredGoal:
+    def parse_natural_language(natural_language_goal: str, file_path: Optional[str] = None) -> StructuredGoal:
         """Deterministic rule-based parser mapping natural language input to a StructuredGoal."""
         if not natural_language_goal or not natural_language_goal.strip():
             logger.warning("Rejecting empty or whitespace goal parsing request")
@@ -33,7 +33,9 @@ class GoalService:
             goal_type = "general_pipeline"
 
         # 2. Determine input_type
-        if "pdf" in lower_text:
+        if file_path:
+            input_type = "pdf" if file_path.lower().endswith(".pdf") else "image"
+        elif "pdf" in lower_text:
             input_type = "pdf"
         elif any(k in lower_text for k in ["image", "png", "jpg", "photo", "scan"]):
             input_type = "image"
@@ -46,7 +48,7 @@ class GoalService:
         operations: List[str] = []
 
         # OCR operation
-        if any(k in lower_text for k in ["ocr", "scan", "extract text", "pdf", "lecture"]):
+        if file_path or any(k in lower_text for k in ["ocr", "scan", "extract text", "pdf", "lecture"]):
             operations.append("OCR")
 
         # Summarization operation
@@ -89,6 +91,12 @@ class GoalService:
                     constraints["target_language"] = lang.capitalize()
                     break
 
+        metadata: Dict[str, Any] = {
+            "parsed_at": datetime.now(timezone.utc).isoformat(),
+            "parser_strategy": "deterministic_rule_based",
+        }
+        if file_path:
+            metadata["file_path"] = file_path
 
         # Construct StructuredGoal
         structured_goal = StructuredGoal(
@@ -98,10 +106,7 @@ class GoalService:
             operations=operations,
             priority=priority,
             constraints=constraints,
-            metadata={
-                "parsed_at": datetime.now(timezone.utc).isoformat(),
-                "parser_strategy": "deterministic_rule_based",
-            },
+            metadata=metadata,
         )
 
         logger.info(
@@ -111,10 +116,11 @@ class GoalService:
 
     @classmethod
     async def parse_and_store_goal(
-        cls, db: AsyncSession, natural_language_goal: str
+        cls, db: AsyncSession, natural_language_goal: str, file_path: Optional[str] = None
     ) -> StructuredGoal:
         """Parse natural language into StructuredGoal and persist Goal entity in SQLite."""
-        structured_goal = cls.parse_natural_language(natural_language_goal)
+        structured_goal = cls.parse_natural_language(natural_language_goal, file_path=file_path)
+
 
         # Persist to database
         goal_repo = GoalRepository(db)

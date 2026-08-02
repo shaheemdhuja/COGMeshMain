@@ -41,11 +41,12 @@ class RuntimeNotifier extends StateNotifier<RuntimeState> {
 
   RuntimeNotifier(this._apiClient) : super(RuntimeState());
 
-  Future<void> runEndToEndPipeline(String prompt) async {
+  Future<void> runEndToEndPipeline(String prompt, {String? filePath}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final goalData = await _apiClient.parseGoal(prompt);
+      final goalData = await _apiClient.parseGoal(prompt, filePath: filePath);
       final String goalId = goalData['goal_id'];
+
       
       await _apiClient.generateWorkflow(goalId);
       await _apiClient.generatePlan(goalId);

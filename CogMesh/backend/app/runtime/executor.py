@@ -41,6 +41,11 @@ class RealTaskExecutor:
                     input_data["target_lang"] = goal_obj.constraints["target_language"]
             if hasattr(goal_obj, "natural_language_input"):
                 input_data["user_prompt"] = goal_obj.natural_language_input
+            if hasattr(goal_obj, "metadata") and isinstance(goal_obj.metadata, dict):
+                if "file_path" in goal_obj.metadata and goal_obj.metadata["file_path"]:
+                    input_data["file_path"] = goal_obj.metadata["file_path"]
+                    input_data["image_path"] = goal_obj.metadata["file_path"]
+
 
         if context and hasattr(context, "results") and context.results:
             input_data.setdefault("node_id", assignment.node_id)
