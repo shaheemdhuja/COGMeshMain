@@ -158,6 +158,85 @@ CogMesh is a modular, high-performance distributed edge AI runtime that coordina
 
 ---
 
+## ⚡ API Documentation — Capability Registry (Sprint 3)
+
+### 1. Report / Update Device Capability
+- **URL**: `POST /api/v1/capabilities/report`
+- **Description**: Registers or updates (upserts) the latest hardware and AI execution capability snapshot for an edge device.
+- **HTTP Success Code**: `200 OK`
+
+#### Request Payload Example:
+```json
+{
+  "device_id": "41f62aae-ae2b-46bd-a413-d27cfc1ce7ff",
+  "cpu_cores": 8,
+  "ram_gb": 16.0,
+  "battery_level": 85.5,
+  "network_quality": "EXCELLENT",
+  "supported_tasks": ["OCR", "SUMMARIZATION", "TRANSLATION"]
+}
+```
+
+#### Response Example (200 OK):
+```json
+{
+  "id": "e982173a-44ba-432d-8b01-526487e41123",
+  "device_id": "41f62aae-ae2b-46bd-a413-d27cfc1ce7ff",
+  "cpu_cores": 8,
+  "ram_gb": 16.0,
+  "battery_level": 85.5,
+  "network_quality": "EXCELLENT",
+  "supported_tasks": [
+    "OCR",
+    "SUMMARIZATION",
+    "TRANSLATION"
+  ],
+  "last_updated": "2026-08-02T13:20:00Z"
+}
+```
+
+#### Error Response (404 Not Found - Unknown Device):
+```json
+{
+  "error": "DeviceNotFoundException",
+  "message": "Device with ID 'unregistered-uuid' was not found.",
+  "details": {
+    "entity": "Device",
+    "id": "unregistered-uuid"
+  }
+}
+```
+
+#### Error Response (422 Unprocessable Entity - Validation Failure):
+```json
+{
+  "detail": [
+    {
+      "type": "less_than_equal",
+      "loc": ["body", "battery_level"],
+      "msg": "Input should be less than or equal to 100",
+      "input": 150.0
+    }
+  ]
+}
+```
+
+---
+
+### 2. Get Single Device Capability
+- **URL**: `GET /api/v1/capabilities/{device_id}`
+- **Description**: Retrieves capability snapshot for a specific edge device by UUID.
+- **HTTP Success Code**: `200 OK`
+
+---
+
+### 3. List All Capabilities
+- **URL**: `GET /api/v1/capabilities`
+- **Description**: Retrieves capability snapshots across all registered edge nodes.
+- **HTTP Success Code**: `200 OK`
+
+---
+
 ## 🧪 Running Tests
 
 ```bash

@@ -31,6 +31,6 @@ class Device(Base, UUIDMixin, TimestampMixin):
     )
 
     # Relationships
-    capabilities: Mapped[List["Capability"]] = relationship("Capability", back_populates="device", cascade="all, delete-orphan")
+    capability: Mapped[Optional["Capability"]] = relationship("Capability", back_populates="device", uselist=False, cascade="all, delete-orphan")
     assigned_tasks: Mapped[List["Task"]] = relationship("Task", back_populates="assigned_device")
     task_logs: Mapped[List["TaskLog"]] = relationship("TaskLog", back_populates="device")
